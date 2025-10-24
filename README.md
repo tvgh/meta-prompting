@@ -40,7 +40,7 @@ Initially, we employed the Azure OpenAI Service to run our experiments; however,
 
 ### Running Experiments and Evaluation
 
-To conduct your own experiments, please feel free to modify and use the `run_experiments.py` file. Before executing this code, however, please ensure that you have installed all the required packages (e.g., `pip install -r requirements.txt`) and have exported all relevant OpenAI API keys and credentials to your local environment (e.g., `export OPENAI_API_KEY="YOUR_API_KEY"`).
+To conduct your own experiments, please feel free to modify and use the `run_experiments.py` file. Before executing this code, however, please ensure that you have installed all the required packages (e.g., `pip install -r requirements.txt`) and have exported all relevant OpenAI API keys and credentials to your local environment (e.g., `export OPENAI_API_KEY="YOUR_API_KEY"`). If you are using an OpenAI-compatible third-party endpoint, you can point the client to your deployment by setting `--api_base` when running the script or exporting `OPENAI_BASE_URL`.
 
 Here is an example command to run the experiments:
 
