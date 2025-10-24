@@ -111,12 +111,31 @@ class OpenAI_LanguageModel(LanguageModel):
         # Set the client to None (by default)
         self.client = None
 
+        placeholder_keys = {None, "", "YOUR_API_KEY"}
+        placeholder_bases = {None, "", "YOUR_API_BASE"}
+        placeholder_versions = {None, "", "YOUR_API_VERSION"}
+
         ## OLD AZURE API CODE
         if self.api_type == "azure":
-            openai.api_key = self.api_key
+            effective_api_key = (
+                None if self.api_key in placeholder_keys else self.api_key
+            ) or os.environ.get("OPENAI_API_KEY")
+            effective_api_base = (
+                None if self.api_base in placeholder_bases else self.api_base
+            ) or os.environ.get("OPENAI_BASE_URL")
+            effective_api_version = (
+                None if self.api_version in placeholder_versions else self.api_version
+            ) or os.environ.get("OPENAI_API_VERSION")
+
+            if not all([effective_api_key, effective_api_base, effective_api_version]):
+                raise ValueError(
+                    "Azure OpenAI usage requires api_key, api_base, and api_version to be provided via arguments or environment variables."
+                )
+
+            openai.api_key = effective_api_key
             openai.api_type = self.api_type
-            openai.api_version = self.api_version
-            openai.api_base = self.api_base
+            openai.api_version = effective_api_version
+            openai.api_base = effective_api_base
 
             if self.model_name in [
                 "code-davinci-002",
@@ -142,10 +161,30 @@ class OpenAI_LanguageModel(LanguageModel):
         else:
             ## NEW OPENAI API CODE SUPPORT
             # Skipping model name validation for now
-            # Set up the client
-            self.client = OpenAI(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-            )
+
+            # Fallback to environment variables if explicit arguments are not provided
+            effective_api_key = (
+                None if self.api_key in placeholder_keys else self.api_key
+            ) or os.environ.get("OPENAI_API_KEY")
+            if effective_api_key is None:
+                raise ValueError(
+                    "An OpenAI API key must be supplied either through the api_key argument or the OPENAI_API_KEY environment variable."
+                )
+
+            effective_base_url = (
+                None if self.api_base in placeholder_bases else self.api_base
+            ) or os.environ.get("OPENAI_BASE_URL")
+
+            # Set up the client, allowing usage of OpenAI compatible endpoints via base_url
+            if effective_base_url:
+                self.client = OpenAI(
+                    api_key=effective_api_key,
+                    base_url=effective_base_url,
+                )
+            else:
+                self.client = OpenAI(
+                    api_key=effective_api_key,
+                )
 
     @retry.retry(tries=3, delay=1)
     def generate(
